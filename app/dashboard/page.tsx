@@ -108,7 +108,7 @@ export default function DashboardPage() {
       {/* Logo */}
       <div className="mb-4">
         <Image
-          src="/assets/bounty/Bounty LOGO.png"
+          src="/assets/bounty/Bounty_LOGO.png"
           alt="Bounty Logo"
           width={290}
           height={0}
