@@ -108,10 +108,10 @@ export default function DashboardPage() {
       {/* Logo */}
       <div className="mb-4">
         <Image
-          src="/assets/bounty/Bounty_LOGO.png"
+          src="https://shvutlcgljqiidqxqrru.supabase.co/storage/v1/object/public/bounty/BOUNTY%20LOGO.png"
           alt="Bounty Logo"
-          width={290}
-          height={0}
+          width={290} // desired width
+          height={150} // corresponding height to maintain aspect ratio
           style={{ height: "auto" }}
           priority
         />
