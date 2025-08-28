@@ -5,8 +5,8 @@ type Props = {
   data: Participant[];
   onSelect: (user: Participant) => void;
   selectedUser: Participant | null;
-  selectedUsers: Participant[]; // add this
-  setSelectedUsers: React.Dispatch<React.SetStateAction<Participant[]>>; // add this
+  selectedUsers: Participant[];
+  setSelectedUsers: React.Dispatch<React.SetStateAction<Participant[]>>;
 };
 
 type SortKey = "full_name_upper" | "email" | "company" | "designation";
@@ -62,12 +62,23 @@ export default function ParticipantsTable({
         <thead className="bg-gray-100 sticky top-0 z-10">
           <tr>
             <th className="p-2 text-left">
+              {/* Select all only for pending users */}
               <input
                 type="checkbox"
-                checked={selectedUsers.length === data.length}
+                checked={
+                  selectedUsers.length > 0 &&
+                  selectedUsers.length ===
+                    data.filter((u) => !u.approved && !u.rejected).length
+                }
                 onChange={(e) => {
-                  if (e.target.checked) setSelectedUsers([...data]);
-                  else setSelectedUsers([]);
+                  if (e.target.checked) {
+                    // only select pending
+                    setSelectedUsers(
+                      data.filter((u) => !u.approved && !u.rejected)
+                    );
+                  } else {
+                    setSelectedUsers([]);
+                  }
                 }}
               />
             </th>
@@ -111,6 +122,7 @@ export default function ParticipantsTable({
         <tbody>
           {sortedData.map((user, index) => {
             const isActive = selectedUser === user;
+            const isDisabled = user.approved || user.rejected;
 
             return (
               <tr
@@ -125,7 +137,7 @@ export default function ParticipantsTable({
                 <td className="p-2">
                   <input
                     type="checkbox"
-                    checked={selectedUsers.includes(user)}
+                    checked={selectedUsers.some((u) => u.email === user.email)}
                     onChange={(e) => {
                       if (e.target.checked) {
                         setSelectedUsers((prev) => [...prev, user]);
@@ -135,7 +147,9 @@ export default function ParticipantsTable({
                         );
                       }
                     }}
-                    onClick={(e) => e.stopPropagation()} // prevent row select
+                    disabled={isDisabled}
+                    className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </td>
 
