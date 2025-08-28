@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Participant } from "../types/participant";
 
 type Props = {
@@ -6,6 +6,7 @@ type Props = {
   onApprove: () => void;
   onReject: () => void;
   approving: boolean;
+  rejecting: boolean; // <-- add separate rejecting state
 };
 
 export default function UserPreview({
@@ -13,6 +14,7 @@ export default function UserPreview({
   onApprove,
   onReject,
   approving,
+  rejecting,
 }: Props) {
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -20,6 +22,11 @@ export default function UserPreview({
   const handleConfirmApprove = () => {
     setShowApprovalModal(false);
     onApprove();
+  };
+
+  const handleConfirmReject = () => {
+    setShowRejectModal(false);
+    onReject();
   };
 
   const initials = user.full_name_upper
@@ -47,20 +54,21 @@ export default function UserPreview({
 
   const avatarClass = getColorClass(user.full_name_upper || "");
 
-  const loaderColors = [
-    "loader-blue",
-    "loader-green",
-    "loader-yellow",
-    "loader-red",
-  ];
-  const randomColorClass =
-    loaderColors[Math.floor(Math.random() * loaderColors.length)];
+  // Precompute loader color once
+  const randomLoaderColor = useMemo(() => {
+    const loaderColors = [
+      "loader-blue",
+      "loader-green",
+      "loader-yellow",
+      "loader-red",
+    ];
+    return loaderColors[Math.floor(Math.random() * loaderColors.length)];
+  }, []);
 
   return (
     <div className="flex flex-col justify-between h-full text-sm">
       {/* Top Section */}
       <div className="space-y-4 text-black">
-        {/* Avatar and Name */}
         <div className="flex items-center gap-3">
           <div
             className={`w-14 h-14 rounded-full ${avatarClass} text-white flex items-center justify-center text-xl font-bold border-4 border-white shadow-md`}
@@ -73,7 +81,6 @@ export default function UserPreview({
           </div>
         </div>
 
-        {/* Info Section */}
         <div className="space-y-2">
           <p>
             <strong>Company:</strong> {user.company || "—"}
@@ -90,7 +97,6 @@ export default function UserPreview({
           <p>
             <strong>First Time:</strong> {user.first_time || "—"}
           </p>
-          {/* Selected Events with Dates */}
           <p>
             <strong>Selected Events:</strong>{" "}
             {user.selected_events?.length
@@ -114,8 +120,8 @@ export default function UserPreview({
       {/* Approve / Reject Actions */}
       {!user.approved && !user.rejected && (
         <div className="pt-4 flex gap-2">
-          {approving ? (
-            <div className={`loader ${randomColorClass} mx-auto`} />
+          {approving || rejecting ? (
+            <div className={`loader ${randomLoaderColor} mx-auto`} />
           ) : (
             <>
               <button
@@ -183,10 +189,7 @@ export default function UserPreview({
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  setShowRejectModal(false);
-                  onReject();
-                }}
+                onClick={handleConfirmReject}
                 className="px-4 py-1 bg-[#EF1748] text-white rounded hover:bg-red-800 cursor-pointer"
               >
                 Confirm

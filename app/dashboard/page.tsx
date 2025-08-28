@@ -80,14 +80,15 @@ export default function DashboardPage() {
     const { error } = await supabase
       .from("bounty_2025_registrations")
       .update({ rejected: true })
-      .eq("email", selectedUser.email); // ✅ use email instead of id
+      .eq("email", selectedUser.email);
 
     if (error) {
       console.error("Reject failed:", error.message);
       toast.error("Failed to reject user.");
     } else {
       toast.success("User rejected successfully!");
-      fetchParticipants();
+      await fetchParticipants();
+      setSelectedUser((prev) => (prev ? { ...prev, rejected: true } : null));
     }
 
     setApproving(false);
