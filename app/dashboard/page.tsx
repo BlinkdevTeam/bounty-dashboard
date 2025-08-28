@@ -73,9 +73,11 @@ export default function DashboardPage() {
     }
   };
 
+  const [rejecting, setRejecting] = useState(false);
+
   const handleReject = async () => {
     if (!selectedUser) return;
-    setApproving(true);
+    setRejecting(true);
 
     const { error } = await supabase
       .from("bounty_2025_registrations")
@@ -91,7 +93,7 @@ export default function DashboardPage() {
       setSelectedUser((prev) => (prev ? { ...prev, rejected: true } : null));
     }
 
-    setApproving(false);
+    setRejecting(false);
   };
 
   // 🔍 Adjust filter to use `full_name_upper`
@@ -159,6 +161,7 @@ export default function DashboardPage() {
               onApprove={handleApprove}
               approving={approving}
               onReject={handleReject}
+              rejecting={rejecting}
             />
           </div>
         )}
