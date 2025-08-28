@@ -5,6 +5,8 @@ type Props = {
   data: Participant[];
   onSelect: (user: Participant) => void;
   selectedUser: Participant | null;
+  selectedUsers: Participant[]; // add this
+  setSelectedUsers: React.Dispatch<React.SetStateAction<Participant[]>>; // add this
 };
 
 type SortKey = "full_name_upper" | "email" | "company" | "designation";
@@ -14,6 +16,8 @@ export default function ParticipantsTable({
   data,
   onSelect,
   selectedUser,
+  selectedUsers,
+  setSelectedUsers,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("full_name_upper");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
@@ -57,6 +61,17 @@ export default function ParticipantsTable({
       <table className="min-w-full table-auto text-sm">
         <thead className="bg-gray-100 sticky top-0 z-10">
           <tr>
+            <th className="p-2 text-left">
+              <input
+                type="checkbox"
+                checked={selectedUsers.length === data.length}
+                onChange={(e) => {
+                  if (e.target.checked) setSelectedUsers([...data]);
+                  else setSelectedUsers([]);
+                }}
+              />
+            </th>
+
             <th
               className="p-2 text-left cursor-pointer"
               onClick={() => toggleSort("full_name_upper")}
@@ -107,6 +122,23 @@ export default function ParticipantsTable({
                 }`}
                 onClick={() => onSelect(user)}
               >
+                <td className="p-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(user)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedUsers((prev) => [...prev, user]);
+                      } else {
+                        setSelectedUsers((prev) =>
+                          prev.filter((u) => u.email !== user.email)
+                        );
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()} // prevent row select
+                  />
+                </td>
+
                 <td className="p-2">{user.full_name_upper || "—"}</td>
                 <td className="p-2">{user.email}</td>
                 <td className="p-2">{user.company}</td>

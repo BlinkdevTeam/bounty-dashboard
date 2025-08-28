@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [approving, setApproving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<Participant[]>([]);
 
   // ✅ Fetch all participants from bounty_2025_registrations
   useEffect(() => {
@@ -96,6 +97,74 @@ export default function DashboardPage() {
     setRejecting(false);
   };
 
+  const handleBulkApprove = async () => {
+    if (selectedUsers.length === 0) return;
+    setApproving(true);
+
+    try {
+      const emails = selectedUsers.map((u) => u.email);
+
+      const { error } = await supabase
+        .from("bounty_2025_registrations")
+        .update({ approved: true })
+        .in("email", emails);
+
+      if (error) {
+        toast.error(`Failed to approve: ${error.message}`);
+        return;
+      }
+
+      // Optional: send emails for each approved participant
+      await Promise.all(
+        selectedUsers.map((user) =>
+          emailjs.send(
+            "service_02hek52",
+            "template_pr85cvj",
+            { fullName: user.full_name_upper, email: user.email },
+            "sOTpCYbD5KllwgbCD"
+          )
+        )
+      );
+
+      toast.success(`${selectedUsers.length} participants approved!`);
+      setSelectedUsers([]);
+      await fetchParticipants();
+    } catch (err) {
+      console.error(err);
+      toast.error("Bulk approval failed.");
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedUsers.length === 0) return;
+    setRejecting(true);
+
+    try {
+      const emails = selectedUsers.map((u) => u.email);
+
+      const { error } = await supabase
+        .from("bounty_2025_registrations")
+        .update({ rejected: true })
+        .in("email", emails);
+
+      if (error) {
+        toast.error(`Failed to reject: ${error.message}`);
+        return;
+      }
+
+      toast.success(`${selectedUsers.length} participants rejected!`);
+      setSelectedUsers([]);
+      await fetchParticipants();
+    } catch (err) {
+      console.error(err);
+      toast.error("Bulk rejection failed.");
+    } finally {
+      setRejecting(false);
+    }
+  };
+
   // 🔍 Adjust filter to use `full_name_upper`
   const filteredParticipants = participants.filter((p) => {
     const term = searchTerm.toLowerCase();
@@ -113,8 +182,8 @@ export default function DashboardPage() {
         <Image
           src="https://shvutlcgljqiidqxqrru.supabase.co/storage/v1/object/public/bounty/BOUNTY%20LOGO.png"
           alt="Bounty Logo"
-          width={290} // desired width
-          height={150} // corresponding height to maintain aspect ratio
+          width={290}
+          height={150}
           style={{ height: "auto" }}
           priority
         />
@@ -138,6 +207,26 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Bulk Action Buttons */}
+      {selectedUsers.length > 0 && (
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={handleBulkApprove}
+            disabled={selectedUsers.length === 0 || approving}
+            className="bg-[#0035E6] text-white px-4 py-1 rounded disabled:opacity-50 cursor-pointer"
+          >
+            Approve Selected ({selectedUsers.length})
+          </button>
+          <button
+            onClick={handleBulkReject}
+            disabled={selectedUsers.length === 0 || rejecting}
+            className="bg-[#EF1748] text-white px-4 py-1 rounded disabled:opacity-50 cursor-pointer"
+          >
+            Reject Selected ({selectedUsers.length})
+          </button>
+        </div>
+      )}
+
       {/* Content area */}
       <div className="flex gap-6 h-auto py-2 overflow-hidden">
         <div className={selectedUser ? "w-2/3" : "w-full overflow-y-auto"}>
@@ -149,6 +238,8 @@ export default function DashboardPage() {
                 data={filteredParticipants}
                 onSelect={(user) => setSelectedUser(user)}
                 selectedUser={selectedUser}
+                selectedUsers={selectedUsers}
+                setSelectedUsers={setSelectedUsers}
               />
             )}
           </div>
